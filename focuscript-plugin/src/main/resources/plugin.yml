@@ -1,0 +1,25 @@
+name: Focuscript
+version: 0.1.0-SNAPSHOT
+main: kr.codename.focuscript.FocuscriptPlugin
+api-version: '1.21'
+prefix: FS
+
+# Paper feature: downloads these libs from Maven Central and adds them to this plugin's classpath.
+# (Huge) Kotlin compiler is required for runtime compilation of .fs modules.
+libraries:
+  - org.jetbrains.kotlin:kotlin-compiler-embeddable:2.2.20
+
+commands:
+  fs:
+    description: Focuscript admin command
+    usage: /fs reload | /fs webide
+    permission: focuscript.admin
+  fscmd:
+    description: Focuscript module command dispatcher
+    usage: /fscmd <workspace> <command> [args...]
+    permission: focuscript.admin
+
+permissions:
+  focuscript.admin:
+    description: Allows using /fs reload
+    default: op

@@ -1,0 +1,4 @@
+name: FocuscriptLatencyDriver
+version: 0.1.0
+main: kr.codename.focuscript.tests.latency.LatencyDriverPlugin
+api-version: '1.21'

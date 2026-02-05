@@ -1,0 +1,4 @@
+name: FocuscriptLatencyProbe
+version: 0.1.0
+main: kr.codename.focuscript.tests.latency.LatencyProbePlugin
+api-version: '1.21'

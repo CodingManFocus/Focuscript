@@ -1,0 +1,15 @@
+intervalTicks: 20
+fireJoinQuit: false
+fireChat: true
+fireCommand: true
+fireBlock: true
+fireDamage: true
+asyncChat: true
+chatMessage: "latency-probe"
+commandLine: "/say latency-probe"
+blockMaterial: "STONE"
+blockOffset:
+  x: 2
+  y: 0
+  z: 0
+damageAmount: 0.1

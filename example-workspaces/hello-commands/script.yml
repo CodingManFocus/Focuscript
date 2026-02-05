@@ -1,0 +1,18 @@
+id: hello-commands
+name: Hello Commands
+version: 1.0.0
+api: 1
+entry: src/main.fs
+load: enable
+depends:
+  - hello-events
+permissions:
+  - focuscript.example.hello
+  - focuscript.example.teleport
+commands:
+  - hello
+  - teleport
+settings:
+  greeting: "hello"
+options:
+  debug: true

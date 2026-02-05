@@ -1,0 +1,13 @@
+id: hello-events
+name: Hello Events
+version: 1.0.0
+api: 1
+entry: src/main.fs
+load: enable
+depends: []
+permissions: []
+commands: []
+settings:
+  welcome: "Welcome to the server!"
+options:
+  debug: true

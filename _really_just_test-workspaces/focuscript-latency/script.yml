@@ -1,0 +1,13 @@
+id: focuscript-latency
+name: Focuscript Latency Probe
+version: 1.0.0
+api: 1
+entry: src/main.fs
+load: enable
+depends: []
+permissions: []
+commands: []
+settings:
+  logIntervalSeconds: 5
+options:
+  debug: true

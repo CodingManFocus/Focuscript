@@ -1,0 +1,17 @@
+id: hello-scheduler
+name: Hello Scheduler
+version: 1.0.0
+api: 1
+entry: src/main.fs
+load: enable
+depends:
+  - hello-events
+permissions: []
+commands: []
+settings:
+  broadcastIntervalMinutes: 3
+  announcements:
+    - "Remember to check /rules"
+    - "Have fun!"
+options:
+  debug: true

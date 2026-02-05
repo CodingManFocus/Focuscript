@@ -1,0 +1,44 @@
+.gradle
+.idea/
+**/build/
+!src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrappper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
+# Eclipse Gradle plugin generated files
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+
+AGENTS.md
+
+focuscript-plugin/bin
+focuscript-api/bin
+
+nul
+
+.settings
+# Java/Kotlin compiled artifacts
+**/*.class
+**/bin/
+
+# IntelliJ / VS Code
+*.iml
+out/
+.vscode/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+Desktop.ini
