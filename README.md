@@ -5,7 +5,7 @@ Language: **English** | **한국어**
 (Scroll down, or use the links below)
 
 - [English](#english)
-- [한국어](#한국어)
+- [한국어](#korean)
 
 ---
 
@@ -309,7 +309,7 @@ GPL-3.0
 
 ---
 
-## 한국어
+## Korean
 
 ### Focuscript란?
 
