@@ -1,4 +1,3 @@
-module {
   val welcome = config.getString("settings.welcome", "Welcome!")
 
   log.info("hello events enabled")
@@ -42,4 +41,3 @@ module {
     val damager = e.damagerPlayer?.name ?: e.damagerType
     log.debug("damage: ${e.player.name} <- $damager (${e.cause} ${e.damage})")
   }
-}

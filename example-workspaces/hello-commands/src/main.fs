@@ -1,4 +1,3 @@
-module {
   log.info("hello commands enabled")
 
   commands.register("hello", "focuscript.example.hello") { ctx ->
@@ -34,4 +33,3 @@ module {
     player.teleport(location(loc.worldName, loc.x, loc.y + 1.0, loc.z, loc.yaw, loc.pitch))
     player.sendText(text("teleported up").color("green"))
   }
-}

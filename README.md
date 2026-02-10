@@ -118,20 +118,18 @@ options:
 ### `src/main.fs` (example)
 
 ```kotlin
-module {
-  val welcome = config.getString("settings.welcome", "Welcome!")
+val welcome = config.getString("settings.welcome", "Welcome!")
 
-  events.onJoin { e ->
-    e.player.sendText(text(welcome).color("green").bold())
-  }
+events.onJoin { e ->
+  e.player.sendText(text(welcome).color("green").bold())
+}
 
-  commands.register("hello", "focuscript.example.hello") { ctx ->
-    ctx.sender.sendText(text("Hello from Focuscript!"))
-  }
+commands.register("hello", "focuscript.example.hello") { ctx ->
+  ctx.sender.sendText(text("Hello from Focuscript!"))
+}
 
-  scheduler.every(3.minutes) {
-    server.broadcast(text("3 minutes passed!").color("yellow"))
-  }
+scheduler.every(3.minutes) {
+  server.broadcast(text("3 minutes passed!").color("yellow"))
 }
 ```
 
@@ -175,9 +173,25 @@ Optional (defaults in parentheses):
 
 ## `.fs` rules (important)
 
-- The `entry` file must start with `module { ... }`  
-  (comments/whitespace are allowed before it)
+- Write the `entry` file as the module body.  
+  Focuscript wraps it with `module { ... }` during compilation.
+- Entry files that start with `module { ... }` are rejected.
 - `.fs` files must **not** declare `package` or `import`
+
+### Split into multiple `.fs` files (`#include`)
+
+In `entry` (`main.fs`), you can inline other `.fs` files with compile-time includes:
+
+```kotlin
+#include "parts/events.fs"
+#include "parts/commands.fs"
+
+log.info("main body")
+```
+
+- `#include` paths are relative to the current file
+- Included files must be inside the same workspace and end with `.fs`
+- Included files are treated as entry body fragments (they are not compiled as standalone `.fs` sources)
 
 This keeps scripts in a controlled “template” so Focuscript can manage compilation and isolation consistently.
 
@@ -199,9 +213,9 @@ This keeps scripts in a controlled “template” so Focuscript can manage compi
 
 ---
 
-## APIs available inside `module { ... }`
+## APIs available in entry `.fs`
 
-Inside a module you typically use these **context objects**:
+Inside the entry script body (auto-wrapped as a module), you typically use these **context objects**:
 
 - `server` — online players, broadcast, dispatch commands
 - `events` — subscribe to server/player events
@@ -225,7 +239,6 @@ These exist so scripts can do gameplay work without depending directly on Paper 
 
 ## Prelude helpers (auto-included)
 
-- `module { ... }`
 - `text("...")` → `FsText`
 - `location("world", x, y, z, yaw, pitch)`
 - `3.ticks`, `3.seconds`, `3.minutes`, `3.hours` → `java.time.Duration`
@@ -285,7 +298,7 @@ If you can’t find any Web IDE logs yet, treat it as a work-in-progress feature
   ```
 
 - **Compilation errors**  
-  Check that your entry file starts with `module { ... }` and that you didn’t add `import`/`package`.
+  Check that your entry file is not empty, is not wrapped with `module { ... }`, and that you didn’t add `import`/`package`.
 
 ---
 
@@ -418,20 +431,18 @@ options:
 ### `src/main.fs` 예시
 
 ```kotlin
-module {
-  val welcome = config.getString("settings.welcome", "Welcome!")
+val welcome = config.getString("settings.welcome", "Welcome!")
 
-  events.onJoin { e ->
-    e.player.sendText(text(welcome).color("green").bold())
-  }
+events.onJoin { e ->
+  e.player.sendText(text(welcome).color("green").bold())
+}
 
-  commands.register("hello", "focuscript.example.hello") { ctx ->
-    ctx.sender.sendText(text("Hello from Focuscript!"))
-  }
+commands.register("hello", "focuscript.example.hello") { ctx ->
+  ctx.sender.sendText(text("Hello from Focuscript!"))
+}
 
-  scheduler.every(3.minutes) {
-    server.broadcast(text("3 minutes passed!").color("yellow"))
-  }
+scheduler.every(3.minutes) {
+  server.broadcast(text("3 minutes passed!").color("yellow"))
 }
 ```
 
@@ -475,9 +486,25 @@ module {
 
 ## `.fs` 규칙 (중요)
 
-- `entry` 파일은 `module { ... }`로 시작해야 합니다  
-  (앞에 주석/공백 허용)
+- `entry` 파일은 모듈 본문만 작성하면 됩니다.  
+  컴파일 시 Focuscript가 자동으로 `module { ... }`로 감싸줍니다.
+- `module { ... }`로 시작하는 entry 파일은 허용되지 않습니다.
 - `.fs`에는 `package`/`import` 선언을 넣을 수 없습니다
+
+### 여러 `.fs` 파일 분리 (`#include`)
+
+`entry` (`main.fs`)에서 컴파일 타임 include로 다른 `.fs`를 불러올 수 있습니다:
+
+```kotlin
+#include "parts/events.fs"
+#include "parts/commands.fs"
+
+log.info("main body")
+```
+
+- `#include` 경로는 현재 파일 기준 상대 경로입니다
+- include 대상은 같은 워크스페이스 내부의 `.fs` 파일이어야 합니다
+- include된 파일은 entry 본문 조각으로 처리되며, 별도 `.fs` 소스로는 컴파일하지 않습니다
 
 ---
 
@@ -497,9 +524,9 @@ module {
 
 ---
 
-## `module { ... }` 안에서 쓸 수 있는 API
+## entry `.fs`에서 쓸 수 있는 API
 
-대표적으로 아래 “컨텍스트 객체”들을 사용합니다:
+entry 스크립트 본문(컴파일 시 module으로 자동 래핑됨)에서 대표적으로 아래 “컨텍스트 객체”들을 사용합니다:
 
 - `server` — 온라인 플레이어 조회, 브로드캐스트, 커맨드 디스패치
 - `events` — 이벤트 구독
@@ -521,7 +548,6 @@ module {
 
 ## 프렐류드 헬퍼 (자동 포함)
 
-- `module { ... }`
 - `text("...")` → `FsText`
 - `location("world", x, y, z, yaw, pitch)`
 - `3.ticks`, `3.seconds`, `3.minutes`, `3.hours` → `java.time.Duration`
@@ -581,7 +607,7 @@ text("#ffcc00 hex").color("#ffcc00")
   를 삭제한 후 다시 로드해 보세요.
 
 - **컴파일 에러**  
-  entry 파일이 `module { ... }`로 시작하는지, `import`/`package`를 넣지 않았는지 확인하세요.
+  entry 파일이 비어 있지 않은지, `module { ... }`로 감싸지 않았는지, `import`/`package`를 넣지 않았는지 확인하세요.
 
 ---
 

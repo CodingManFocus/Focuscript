@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +26,7 @@ public final class FsCompiler {
     public static final String KOTLIN_COMPILER_VERSION = "2.2.20";
 
     private static final String MODULE_PACKAGE_BASE = "kr.codename.focuscript.modules";
+    private static final Pattern INCLUDE_DIRECTIVE = Pattern.compile("(?m)^\\s*#include\\s+\"([^\"]+)\"\\s*$");
 
     private final FocuscriptPlugin plugin;
     private final Path apiJarPath;
@@ -97,18 +100,18 @@ public final class FsCompiler {
         }
         String entryText = Files.readString(entryFs, StandardCharsets.UTF_8);
         validateNoPackageOrImport(entryText, entryFs);
-
-        if (!startsWithModuleCall(entryText)) {
-            throw new IOException("Entry file must start with `module { ... }` (comments/whitespace allowed): " + entryFs);
-        }
+        EntrySource entrySource = toEntryModuleExpression(entryText, entryFs, workspace.root());
+        String entryModuleExpression = entrySource.moduleExpression();
+        Set<Path> includedEntrySources = entrySource.includedSources();
 
         Path entryKt = genSrcDir.resolve("__FocuscriptEntry.kt");
-        Files.writeString(entryKt, KotlinSourceTemplates.entry(modulePackage, entryText), StandardCharsets.UTF_8);
+        Files.writeString(entryKt, KotlinSourceTemplates.entry(modulePackage, entryModuleExpression), StandardCharsets.UTF_8);
 
         // 3) Other sources
         int idx = 0;
         for (Path fs : sources) {
-            if (fs.equals(entryFs)) continue;
+            Path normalized = fs.toAbsolutePath().normalize();
+            if (fs.equals(entryFs) || includedEntrySources.contains(normalized)) continue;
             String src = Files.readString(fs, StandardCharsets.UTF_8);
             validateNoPackageOrImport(src, fs);
 
@@ -224,6 +227,86 @@ private static void tryAdd(List<Path> list, Path p) {
         if (m.find()) {
             throw new IOException("Focuscript .fs must not declare package/import (prelude is automatic). Offending file: " + file);
         }
+    }
+
+    private static EntrySource toEntryModuleExpression(String entryText, Path entryFs, Path workspaceRoot) throws IOException {
+        if (entryText == null || entryText.strip().isEmpty()) {
+            throw new IOException("Entry file is empty: " + entryFs);
+        }
+
+        Path normalizedEntry = entryFs.toAbsolutePath().normalize();
+        Path normalizedWorkspaceRoot = workspaceRoot.toAbsolutePath().normalize();
+        LinkedHashSet<Path> includedSources = new LinkedHashSet<>();
+        Deque<Path> stack = new ArrayDeque<>();
+        stack.push(normalizedEntry);
+        String expandedEntry = resolveIncludeDirectives(
+                entryText,
+                normalizedEntry,
+                normalizedWorkspaceRoot,
+                stack,
+                includedSources
+        );
+
+        // Explicit module wrappers in entry are no longer supported.
+        if (startsWithModuleCall(expandedEntry)) {
+            throw new IOException("Entry file must be plain body (do not wrap with `module { ... }`): " + entryFs);
+        }
+
+        // Entry .fs is treated as module body and wrapped automatically.
+        String body = expandedEntry.stripTrailing();
+        return new EntrySource("module {\n" + body + "\n}", Set.copyOf(includedSources));
+    }
+
+    private static String resolveIncludeDirectives(
+            String text,
+            Path currentFile,
+            Path workspaceRoot,
+            Deque<Path> stack,
+            Set<Path> includedSources
+    ) throws IOException {
+        Matcher matcher = INCLUDE_DIRECTIVE.matcher(text);
+        StringBuffer out = new StringBuffer();
+
+        while (matcher.find()) {
+            String rel = matcher.group(1).trim();
+            if (rel.isEmpty()) {
+                throw new IOException("Empty #include path in: " + currentFile);
+            }
+
+            Path includePath = currentFile.getParent().resolve(rel).normalize();
+            if (!includePath.startsWith(workspaceRoot)) {
+                throw new IOException("#include escapes workspace root: " + rel + " in " + currentFile);
+            }
+            if (!includePath.toString().endsWith(".fs")) {
+                throw new IOException("#include must target a .fs file: " + rel + " in " + currentFile);
+            }
+            if (!Files.isRegularFile(includePath)) {
+                throw new IOException("#include file not found: " + includePath);
+            }
+            if (stack.contains(includePath)) {
+                throw new IOException("Circular #include detected: " + includePath);
+            }
+
+            String includeText = Files.readString(includePath, StandardCharsets.UTF_8);
+            validateNoPackageOrImport(includeText, includePath);
+
+            stack.push(includePath);
+            String resolved;
+            try {
+                resolved = resolveIncludeDirectives(includeText, includePath, workspaceRoot, stack, includedSources);
+            } finally {
+                stack.pop();
+            }
+
+            includedSources.add(includePath);
+            matcher.appendReplacement(out, Matcher.quoteReplacement(resolved));
+        }
+
+        matcher.appendTail(out);
+        return out.toString();
+    }
+
+    private record EntrySource(String moduleExpression, Set<Path> includedSources) {
     }
 
     private static boolean startsWithModuleCall(String text) {

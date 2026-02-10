@@ -1,4 +1,3 @@
-module {
   val interval = config.getInt("settings.broadcastIntervalMinutes", 3)
   val messages = config.getStringList("settings.announcements")
 
@@ -22,4 +21,3 @@ module {
   onDisable {
     storage.save()
   }
-}

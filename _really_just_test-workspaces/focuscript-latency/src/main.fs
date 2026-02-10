@@ -1,4 +1,3 @@
-module {
   val intervalSeconds = config.getInt("settings.logIntervalSeconds", 5)
 
   var totalEvents = 0L
@@ -103,4 +102,3 @@ module {
     deathCount = 0
     damageCount = 0
   }
-}

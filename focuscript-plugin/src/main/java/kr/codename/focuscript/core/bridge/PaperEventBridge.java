@@ -159,6 +159,7 @@ public final class PaperEventBridge implements Listener {
                 PaperFsLocation.fromBukkit(block.getLocation()),
                 block.getType().getKey().toString()
         );
+
         dispatch("onBlockPlace", blockPlaceHandlers, fsEvent);
     }
 
